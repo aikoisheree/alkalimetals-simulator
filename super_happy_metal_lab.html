@@ -1,0 +1,884 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Happy Metal Lab!</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Canvas Confetti -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Creepster&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', cursive, sans-serif;
+            transition: background-color 0.8s ease, color 0.8s ease;
+            user-select: none;
+        }
+
+        .evil-mode {
+            font-family: 'Creepster', cursive, sans-serif !important;
+        }
+
+        /* Bouncy Joy Animations */
+        @keyframes bounce-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+        .animate-bounce-gentle {
+            animation: bounce-gentle 2s infinite ease-in-out;
+        }
+
+        @keyframes pulse-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 223, 0, 0.6)); }
+            50% { filter: drop-shadow(0 0 25px rgba(255, 105, 180, 0.9)); }
+        }
+        .joy-glow {
+            animation: pulse-glow 2s infinite ease-in-out;
+        }
+
+        @keyframes evil-glow {
+            0%, 100% { filter: drop-shadow(0 0 10px rgba(255, 0, 0, 0.8)); }
+            50% { filter: drop-shadow(0 0 25px rgba(138, 43, 226, 1)); }
+        }
+        .evil-glow {
+            animation: evil-glow 1.5s infinite ease-in-out;
+        }
+
+        /* Screen Shake for Explosions */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-screen {
+            animation: shake 0.1s infinite;
+        }
+
+        /* Glass beaker effect */
+        .glass-beaker {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(8px);
+            border: 4px solid rgba(255, 255, 255, 0.6);
+            border-top: none;
+            border-radius: 0 0 3rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .glass-beaker-evil {
+            background: rgba(20, 0, 20, 0.5);
+            backdrop-filter: blur(8px);
+            border: 4px solid rgba(255, 0, 80, 0.6);
+            border-top: none;
+            border-radius: 0 0 3rem 3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Liquid Wave Animation */
+        .wave {
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            opacity: 0.7;
+            left: -50%;
+            top: 50%;
+            border-radius: 40%;
+            transition: all 0.5s ease;
+        }
+        .wave-joy {
+            background: linear-gradient(180deg, rgba(56, 189, 248, 0.6) 0%, rgba(59, 130, 246, 0.8) 100%);
+            animation: rotate 6s infinite linear;
+        }
+        .wave-evil {
+            background: linear-gradient(180deg, rgba(220, 38, 38, 0.7) 0%, rgba(88, 28, 135, 0.9) 100%);
+            animation: rotate 3s infinite linear;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.05);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0,0,0,0.2);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body id="body-bg" class="bg-gradient-to-br from-pink-300 via-purple-200 to-sky-300 min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden transition-all duration-700">
+
+    <!-- TOP HEADER -->
+    <header class="p-4 text-center relative z-10">
+        <div id="header-card" class="max-w-3xl mx-auto bg-white/80 backdrop-blur-md rounded-3xl p-4 shadow-xl border-4 border-white/60 transition-all duration-700">
+            <h1 id="app-title" class="text-3xl md:text-5xl font-extrabold text-pink-500 tracking-wide drop-shadow-sm animate-bounce-gentle flex items-center justify-center gap-3">
+                <i class="fa-solid fa-wand-magic-sparkles text-yellow-400"></i>
+                <span id="title-text">✨ Super Happy Lab! ✨</span>
+                <i class="fa-solid fa-flask-vial text-pink-400"></i>
+            </h1>
+            <p id="app-subtitle" class="text-sm md:text-base font-semibold text-purple-600 mt-1">
+                Pick a shiny Alkali Metal & add a reactant to see happy magic chemistry! 🌈
+            </p>
+        </div>
+    </header>
+
+    <!-- MAIN LAB CONTAINER -->
+    <main class="max-w-5xl mx-auto w-full p-4 grid grid-cols-1 md:grid-cols-12 gap-6 relative z-10 my-auto">
+        
+        <!-- LEFT CONTROL PANEL: METALS -->
+        <section id="metal-panel" class="md:col-span-4 bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-xl border-4 border-white/60 flex flex-col justify-between transition-all duration-700">
+            <div>
+                <h2 id="metal-heading" class="text-xl font-bold text-purple-700 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-cubes-stacked text-amber-400"></i>
+                    <span>1. Select Alkali Metal</span>
+                </h2>
+                <div class="grid grid-cols-2 gap-2.5" id="metal-buttons">
+                    <!-- Dynamic Buttons Generated in JS -->
+                </div>
+            </div>
+
+            <!-- METAL INFO CARD -->
+            <div id="metal-info-card" class="mt-4 p-3 rounded-2xl bg-pink-50 border-2 border-pink-200 text-xs text-slate-600">
+                <span class="font-bold text-pink-600 block text-sm" id="info-name">Select a metal!</span>
+                <p id="info-desc" class="mt-1">Alkali metals are super reactive and love to share their outer electron! 😊</p>
+            </div>
+        </section>
+
+        <!-- CENTER REACTION BEAKER & VISUALIZER -->
+        <section class="md:col-span-5 flex flex-col items-center justify-center relative">
+            
+            <!-- REACTION CHAMBER / BEAKER -->
+            <div class="w-full max-w-xs h-72 relative flex flex-col justify-end items-center">
+                
+                <!-- Dropping Metal Element Indicator -->
+                <div id="metal-droplet" class="absolute top-2 w-12 h-12 rounded-full shadow-lg border-2 border-white flex items-center justify-center font-bold text-white text-lg transition-all duration-500 opacity-0 z-20">
+                    Li
+                </div>
+
+                <!-- Reactant Atmosphere/Overlay (Oxygen/Steam) -->
+                <div id="atmosphere-effect" class="absolute inset-0 rounded-b-full pointer-events-none z-10 transition-opacity duration-500 opacity-0 flex items-center justify-center">
+                    <div id="gas-particles" class="text-3xl animate-pulse">💨 ☁️ 💨</div>
+                </div>
+
+                <!-- BEAKER CONTAINER -->
+                <div id="beaker-frame" class="glass-beaker w-56 h-64 shadow-2xl z-10 flex items-end justify-center">
+                    
+                    <!-- Liquid in Beaker (for Water/Acid) -->
+                    <div id="liquid-wave" class="wave wave-joy"></div>
+
+                    <!-- Visual Particles / Bubbles Canvas -->
+                    <canvas id="reaction-canvas" class="absolute inset-0 w-full h-full z-20 pointer-events-none"></canvas>
+                    
+                    <!-- Flame/Spark Effect Canvas -->
+                    <canvas id="fire-canvas" class="absolute inset-0 w-full h-full z-25 pointer-events-none"></canvas>
+
+                    <!-- Happy/Evil Beaker Face -->
+                    <div id="beaker-face" class="absolute top-12 z-20 text-3xl transition-transform duration-300 hover:scale-125 cursor-pointer">
+                        😊
+                    </div>
+
+                    <!-- Indicator Inside Beaker -->
+                    <div id="beaker-label" class="absolute bottom-2 z-20 text-xs font-bold text-white/90 drop-shadow">
+                        Ready!
+                    </div>
+                </div>
+
+                <!-- Beaker Stand / Base -->
+                <div class="w-64 h-4 bg-slate-300/80 rounded-full mt-1 shadow-md border border-white/50"></div>
+            </div>
+
+            <!-- START REACTION BUTTON -->
+            <button id="react-btn" onclick="triggerReaction()" class="mt-5 w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-amber-400 via-pink-500 to-purple-500 text-white font-extrabold text-lg shadow-lg hover:shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border-2 border-white/50 flex items-center justify-center gap-3 group joy-glow">
+                <span>MIX & REACT!</span>
+                <i class="fa-solid fa-rocket group-hover:rotate-45 transition-transform duration-300"></i>
+            </button>
+        </section>
+
+        <!-- RIGHT CONTROL PANEL: REACTANTS & FORMULA DISPLAY -->
+        <section id="reactant-panel" class="md:col-span-3 bg-white/80 backdrop-blur-md rounded-3xl p-5 shadow-xl border-4 border-white/60 flex flex-col justify-between transition-all duration-700">
+            <div>
+                <h2 id="reactant-heading" class="text-xl font-bold text-purple-700 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-flask text-teal-400"></i>
+                    <span>2. Add Reactant</span>
+                </h2>
+                <div class="flex flex-col gap-2.5" id="reactant-buttons">
+                    <!-- Reactant Buttons -->
+                </div>
+            </div>
+
+            <!-- CHEMICAL FORMULA RESULT BOX -->
+            <div id="formula-card" class="mt-4 p-4 rounded-2xl bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-200 text-center shadow-inner transition-all duration-500">
+                <span class="text-xs font-bold text-indigo-400 uppercase tracking-widest block mb-1">Chemical Equation</span>
+                <div id="formula-text" class="text-base font-extrabold text-indigo-900 my-1 break-words leading-snug">
+                    Select ingredients!
+                </div>
+                <div id="product-name" class="text-xs text-indigo-600 font-medium italic mt-1">
+                    Waiting for chemical reaction...
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- FOOTER / FUN FACT -->
+    <footer class="p-3 text-center relative z-10">
+        <div id="footer-card" class="max-w-md mx-auto bg-white/60 backdrop-blur-sm rounded-full py-1.5 px-4 text-xs font-semibold text-slate-600 shadow-sm border border-white/40">
+            <span id="footer-text">💡 Fun Fact: Alkali metals are so soft they can be cut with a butter knife!</span>
+        </div>
+    </footer>
+
+    <!-- SYNTHESIZED SOUND & MUSIC CONTROLS -->
+    <div class="fixed bottom-4 right-4 z-40 flex items-center gap-2">
+        <button id="music-toggle-btn" onclick="toggleMusic()" class="bg-white/80 backdrop-blur-md hover:bg-white text-slate-800 font-bold p-3 rounded-full shadow-lg border-2 border-white/60 transition-transform active:scale-95 flex items-center gap-2 text-sm">
+            <i id="music-icon" class="fa-solid fa-music text-pink-500"></i>
+            <span id="music-label">🎵 Background Music: Off</span>
+        </button>
+    </div>
+
+    <!-- EXPLOSION OVERLAY (FRANCIUM TRIGGER) -->
+    <div id="explosion-overlay" class="fixed inset-0 bg-red-600/90 z-50 flex flex-col items-center justify-center opacity-0 pointer-events-none transition-opacity duration-300 text-white p-6 text-center">
+        <div class="text-8xl md:text-9xl mb-4 animate-bounce">💥 ☢️ 💥</div>
+        <h1 class="text-4xl md:text-6xl font-black mb-2 tracking-widest uppercase drop-shadow-lg">BOOOOOOM!</h1>
+        <p class="text-xl md:text-2xl font-bold max-w-xl mb-6 text-yellow-200">
+            FRANCIUM IS FAR TOO REACTIVE! YOU NUKED THE HAPPY LAB!
+        </p>
+        <button onclick="restartGame()" class="px-8 py-4 bg-yellow-400 hover:bg-yellow-300 text-slate-900 rounded-2xl font-extrabold text-2xl shadow-2xl hover:scale-110 active:scale-95 transition-all border-4 border-slate-900 animate-pulse">
+            RESTART SIMULATOR ⚡
+        </button>
+    </div>
+
+    <!-- AUDIO & GAME LOGIC -->
+    <script>
+        // --- GAME STATE ---
+        let isEvil = false;
+        let selectedMetal = 'Na';
+        let selectedReactant = 'Water';
+        let isReacting = false;
+        let isMusicPlaying = false;
+        let bgmInterval = null;
+
+        // Web Audio API Synthesizer
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        // Synthesizer procedural BGM generator for Happy/Evil theme
+        function startBGM() {
+            if (bgmInterval) clearInterval(bgmInterval);
+            let noteIndex = 0;
+            // Joyful Undertale-inspired melodic chiptune scale
+            const happyScale = [261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25, 587.33, 659.25]; 
+            const evilScale = [130.81, 138.59, 155.56, 164.81, 185.00, 196.00, 207.65]; // C Minor/Diminished
+
+            bgmInterval = setInterval(() => {
+                if (!isMusicPlaying) return;
+                if (audioCtx.state === 'suspended') audioCtx.resume();
+
+                const now = audioCtx.currentTime;
+                const osc = audioCtx.createOscillator();
+                const gain = audioCtx.createGain();
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+
+                const scale = isEvil ? evilScale : happyScale;
+                const freq = scale[Math.floor(Math.random() * scale.length)];
+                
+                osc.type = isEvil ? 'sawtooth' : 'square';
+                osc.frequency.setValueAtTime(freq, now);
+
+                gain.gain.setValueAtTime(isEvil ? 0.08 : 0.04, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+                osc.start(now);
+                osc.stop(now + 0.28);
+                noteIndex++;
+            }, 180);
+        }
+
+        function stopBGM() {
+            if (bgmInterval) {
+                clearInterval(bgmInterval);
+                bgmInterval = null;
+            }
+        }
+
+        function toggleMusic() {
+            isMusicPlaying = !isMusicPlaying;
+            const btnLabel = document.getElementById('music-label');
+            const btnIcon = document.getElementById('music-icon');
+
+            if (isMusicPlaying) {
+                if (isEvil) {
+                    btnLabel.innerText = '🎵 Playing: Boss Synth';
+                    btnIcon.className = 'fa-solid fa-compact-disc animate-spin text-red-500';
+                } else {
+                    btnLabel.innerText = '🎵 Playing: Your Best Friend Chiptune';
+                    btnIcon.className = 'fa-solid fa-music animate-bounce text-pink-500';
+                }
+                startBGM();
+            } else {
+                btnLabel.innerText = '🎵 Background Music: Off';
+                btnIcon.className = 'fa-solid fa-music text-slate-400';
+                stopBGM();
+            }
+        }
+
+        // Data for Alkali Metals with Reactivity Ranks (1-6) and Flame Color Profile
+        const metals = [
+            { symbol: 'Li', name: 'Lithium', atomic: 3, rank: 1, color: '#f43f5e', flameColor: '#ff2a5f', evilColor: '#881337', joyDesc: 'Lightest alkali metal! Fizzes gently and happily with soft red sparks.', evilDesc: 'Corrosive hellfire element. Toxic and hostile.' },
+            { symbol: 'Na', name: 'Sodium', atomic: 11, rank: 2, color: '#f59e0b', flameColor: '#ffb700', evilColor: '#78350f', joyDesc: 'Super energetic! Skitters rapidly with bright golden yellow flames!', evilDesc: 'Unstable explosive entity ready to scorch everything.' },
+            { symbol: 'K',  name: 'Potassium', atomic: 19, rank: 3, color: '#a855f7', flameColor: '#d8b4fe', evilColor: '#581c87', joyDesc: 'Loves to party! Ignites with intense lavender-lilac fireworks!', evilDesc: 'Violent violet flame demon. Highly unpredictable.' },
+            { symbol: 'Rb', name: 'Rubidium', atomic: 37, rank: 4, color: '#ec4899', evilColor: '#831843', flameColor: '#f472b6', joyDesc: 'Super fast reaction! Sinks and creates violent magenta shockwaves!', evilDesc: 'Dark red demonic element that violently bursts.' },
+            { symbol: 'Cs', name: 'Caesium', atomic: 55, rank: 5, color: '#06b6d4', evilColor: '#164e63', flameColor: '#38bdf8', joyDesc: 'EXTREMELY REACTIVE! Instant explosive cyan shockwave & flash burst!', evilDesc: 'Malicious cyan poison that shatters glass effortlessly.' },
+            { symbol: 'Fr', name: 'Francium', atomic: 87, rank: 6, color: '#10b981', evilColor: '#064e3b', flameColor: '#34d399', joyDesc: 'DANGER! Most reactive & radioactive of all! ⚠️', evilDesc: 'THE DESTROYER OF WORLDS. DO NOT TOUCH.' }
+        ];
+
+        // Data for Reactants
+        const reactants = [
+            { id: 'Water', name: 'Water (H₂O)', icon: 'fa-droplet', color: 'bg-blue-400' },
+            { id: 'Steam', name: 'Steam (H₂O g)', icon: 'fa-cloud', color: 'bg-sky-300' },
+            { id: 'HCl', name: 'Hydrochloric Acid (HCl)', icon: 'fa-vial', color: 'bg-emerald-400' },
+            { id: 'H2SO4', name: 'Sulfuric Acid (H₂SO₄)', icon: 'fa-flask-vial', color: 'bg-yellow-400' },
+            { id: 'HNO3', name: 'Nitric Acid (HNO₃)', icon: 'fa-skull-crossbones', color: 'bg-orange-400' },
+            { id: 'CH3COOH', name: 'Acetic Acid (Vinegar)', icon: 'fa-bottle-droplet', color: 'bg-lime-400' },
+            { id: 'Oxygen', name: 'Oxygen (O₂)', icon: 'fa-wind', color: 'bg-amber-300' }
+        ];
+
+        // Reactions & Formulas (Balanced Equations)
+        const reactionData = {
+            'Li': {
+                'Water': { eq: '2Li + 2H₂O → 2LiOH + H₂↑', name: 'Lithium Hydroxide + Hydrogen Gas', sound: 'gentle' },
+                'Steam': { eq: '2Li + 2H₂O (g) → Li₂O + H₂↑', name: 'Lithium Oxide + Hydrogen Gas', sound: 'hiss' },
+                'HCl': { eq: '2Li + 2HCl → 2LiCl + H₂↑', name: 'Lithium Chloride + Hydrogen Gas', sound: 'pop' },
+                'H2SO4': { eq: '2Li + H₂SO₄ → Li₂SO₄ + H₂↑', name: 'Lithium Sulfate + Hydrogen Gas', sound: 'pop' },
+                'HNO3': { eq: '2Li + 2HNO₃ → 2LiNO₃ + H₂↑', name: 'Lithium Nitrate + Hydrogen Gas', sound: 'pop' },
+                'CH3COOH': { eq: '2Li + 2CH₃COOH → 2CH₃COOLi + H₂↑', name: 'Lithium Acetate + Hydrogen Gas', sound: 'gentle' },
+                'Oxygen': { eq: '4Li + O₂ → 2Li₂O', name: 'Lithium Oxide', sound: 'spark' }
+            },
+            'Na': {
+                'Water': { eq: '2Na + 2H₂O → 2NaOH + H₂↑', name: 'Sodium Hydroxide + Hydrogen Gas', sound: 'pop' },
+                'Steam': { eq: '2Na + 2H₂O (g) → Na₂O + H₂↑', name: 'Sodium Oxide + Hydrogen Gas', sound: 'hiss' },
+                'HCl': { eq: '2Na + 2HCl → 2NaCl + H₂↑', name: 'Sodium Chloride (Table Salt!) + Hydrogen Gas', sound: 'bang' },
+                'H2SO4': { eq: '2Na + H₂SO₄ → Na₂SO₄ + H₂↑', name: 'Sodium Sulfate + Hydrogen Gas', sound: 'bang' },
+                'HNO3': { eq: '2Na + 2HNO₃ → 2NaNO₃ + H₂↑', name: 'Sodium Nitrate + Hydrogen Gas', sound: 'bang' },
+                'CH3COOH': { eq: '2Na + 2CH₃COOH → 2CH₃COONa + H₂↑', name: 'Sodium Acetate + Hydrogen Gas', sound: 'pop' },
+                'Oxygen': { eq: '2Na + O₂ → Na₂O₂', name: 'Sodium Peroxide', sound: 'spark' }
+            },
+            'K': {
+                'Water': { eq: '2K + 2H₂O → 2KOH + H₂↑', name: 'Potassium Hydroxide + Hydrogen Gas', sound: 'boom' },
+                'Steam': { eq: '2K + 2H₂O (g) → K₂O + H₂↑', name: 'Potassium Oxide + Hydrogen Gas', sound: 'hiss' },
+                'HCl': { eq: '2K + 2HCl → 2KCl + H₂↑', name: 'Potassium Chloride + Hydrogen Gas', sound: 'boom' },
+                'H2SO4': { eq: '2K + H₂SO₄ → K₂SO₄ + H₂↑', name: 'Potassium Sulfate + Hydrogen Gas', sound: 'boom' },
+                'HNO3': { eq: '2K + 2HNO₃ → 2KNO₃ + H₂↑', name: 'Potassium Nitrate (Saltpeter) + Hydrogen Gas', sound: 'boom' },
+                'CH3COOH': { eq: '2K + 2CH₃COOH → 2CH₃COOK + H₂↑', name: 'Potassium Acetate + Hydrogen Gas', sound: 'pop' },
+                'Oxygen': { eq: 'K + O₂ → KO₂', name: 'Potassium Superoxide', sound: 'spark' }
+            },
+            'Rb': {
+                'Water': { eq: '2Rb + 2H₂O → 2RbOH + H₂↑', name: 'Rubidium Hydroxide + Hydrogen Gas', sound: 'boom' },
+                'Steam': { eq: '2Rb + 2H₂O (g) → Rb₂O + H₂↑', name: 'Rubidium Oxide + Hydrogen Gas', sound: 'hiss' },
+                'HCl': { eq: '2Rb + 2HCl → 2RbCl + H₂↑', name: 'Rubidium Chloride + Hydrogen Gas', sound: 'boom' },
+                'H2SO4': { eq: '2Rb + H₂SO₄ → Rb₂SO₄ + H₂↑', name: 'Rubidium Sulfate + Hydrogen Gas', sound: 'boom' },
+                'HNO3': { eq: '2Rb + 2HNO₃ → 2RbNO₃ + H₂↑', name: 'Rubidium Nitrate + Hydrogen Gas', sound: 'boom' },
+                'CH3COOH': { eq: '2Rb + 2CH₃COOH → 2CH₃COORb + H₂↑', name: 'Rubidium Acetate + Hydrogen Gas', sound: 'boom' },
+                'Oxygen': { eq: 'Rb + O₂ → RbO₂', name: 'Rubidium Superoxide', sound: 'spark' }
+            },
+            'Cs': {
+                'Water': { eq: '2Cs + 2H₂O → 2CsOH + H₂↑', name: 'Caesium Hydroxide + Hydrogen Gas', sound: 'boom' },
+                'Steam': { eq: '2Cs + 2H₂O (g) → Cs₂O + H₂↑', name: 'Caesium Oxide + Hydrogen Gas', sound: 'hiss' },
+                'HCl': { eq: '2Cs + 2HCl → 2CsCl + H₂↑', name: 'Caesium Chloride + Hydrogen Gas', sound: 'boom' },
+                'H2SO4': { eq: '2Cs + H₂SO₄ → Cs₂SO₄ + H₂↑', name: 'Caesium Sulfate + Hydrogen Gas', sound: 'boom' },
+                'HNO3': { eq: '2Cs + 2HNO₃ → 2CsNO₃ + H₂↑', name: 'Caesium Nitrate + Hydrogen Gas', sound: 'boom' },
+                'CH3COOH': { eq: '2Cs + 2CH₃COOH → 2CH₃COOCs + H₂↑', name: 'Caesium Acetate + Hydrogen Gas', sound: 'boom' },
+                'Oxygen': { eq: 'Cs + O₂ → CsO₂', name: 'Caesium Superoxide', sound: 'spark' }
+            },
+            'Fr': {
+                'Water': { eq: '2Fr + 2H₂O → APOCALYPSE ☢️', name: 'Catastrophic Nuclear Destruction', sound: 'nuke' },
+                'Steam': { eq: '2Fr + 2H₂O (g) → APOCALYPSE ☢️', name: 'Thermal Vapor Explosion', sound: 'nuke' },
+                'HCl': { eq: '2Fr + 2HCl → APOCALYPSE ☢️', name: 'Acidic Hydrochloric Burst', sound: 'nuke' },
+                'H2SO4': { eq: '2Fr + H₂SO₄ → APOCALYPSE ☢️', name: 'Violent Sulfuric Detonation', sound: 'nuke' },
+                'HNO3': { eq: '2Fr + 2HNO₃ → APOCALYPSE ☢️', name: 'Nitric Plasma Shockwave', sound: 'nuke' },
+                'CH3COOH': { eq: '2Fr + 2CH₃COOH → APOCALYPSE ☢️', name: 'Explosive Acetic Vaporization', sound: 'nuke' },
+                'Oxygen': { eq: '4Fr + O₂ → APOCALYPSE ☢️', name: 'Instant Radioactive Ignition', sound: 'nuke' }
+            }
+        };
+
+        function playSound(type, metalSymbol = 'Na') {
+            if (audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+            const m = metals.find(item => item.symbol === metalSymbol) || metals[1];
+            const rank = m.rank;
+            const now = audioCtx.currentTime;
+
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'click') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(isEvil ? 150 : 587.33, now);
+                gain.gain.setValueAtTime(0.1, now);
+                gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
+            } else if (type === 'gentle' || type === 'hiss') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(isEvil ? 100 : 300 + rank * 50, now);
+                gain.gain.setValueAtTime(0.1 + rank * 0.03, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.3 + rank * 0.1);
+                osc.start(now);
+                osc.stop(now + 0.5);
+            } else if (type === 'pop' || type === 'spark' || type === 'bang') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(isEvil ? 60 : 150 * rank, now);
+                osc.frequency.exponentialRampToValueAtTime(isEvil ? 20 : 600 + rank * 200, now + 0.2 + rank * 0.05);
+                gain.gain.setValueAtTime(0.2 + rank * 0.05, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.2 + rank * 0.08);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            } else if (type === 'boom' || type === 'nuke') {
+                const duration = type === 'nuke' ? 2.5 : 0.3 + rank * 0.2;
+                const bufferSize = audioCtx.sampleRate * duration;
+                const buffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+                const data = buffer.getChannelData(0);
+                for (let i = 0; i < bufferSize; i++) {
+                    data[i] = Math.random() * 2 - 1;
+                }
+                const noise = audioCtx.createBufferSource();
+                noise.buffer = buffer;
+
+                const filter = audioCtx.createBiquadFilter();
+                filter.type = 'lowpass';
+                filter.frequency.setValueAtTime(type === 'nuke' ? 900 : 200 + rank * 200, now);
+                filter.frequency.linearRampToValueAtTime(20, now + duration);
+
+                const nGain = audioCtx.createGain();
+                nGain.gain.setValueAtTime(Math.min(1.0, 0.3 + rank * 0.15), now);
+                nGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+
+                noise.connect(filter);
+                filter.connect(nGain);
+                nGain.connect(audioCtx.destination);
+
+                noise.start(now);
+            }
+        }
+
+        // --- RENDER FUNCTIONS ---
+        function renderButtons() {
+            const metalContainer = document.getElementById('metal-buttons');
+            metalContainer.innerHTML = '';
+            metals.forEach(m => {
+                const btn = document.createElement('button');
+                const isSelected = m.symbol === selectedMetal;
+                const bgColor = isEvil ? m.evilColor : m.color;
+
+                btn.className = `p-3 rounded-2xl font-bold flex flex-col items-center justify-center transition-all duration-300 shadow-md ${
+                    isSelected 
+                        ? 'ring-4 ring-yellow-400 scale-105 text-white' 
+                        : 'bg-white/70 hover:bg-white text-slate-700 hover:scale-102'
+                }`;
+                if (isSelected) {
+                    btn.style.backgroundColor = bgColor;
+                }
+
+                btn.onclick = () => {
+                    selectedMetal = m.symbol;
+                    playSound('click');
+                    renderButtons();
+                    updateInfoCard();
+                    updateBeakerAppearance();
+                };
+
+                btn.innerHTML = `
+                    <span class="text-xl font-extrabold">${m.symbol}</span>
+                    <span class="text-[10px] opacity-80">${m.name}</span>
+                `;
+                metalContainer.appendChild(btn);
+            });
+
+            const reactantContainer = document.getElementById('reactant-buttons');
+            reactantContainer.innerHTML = '';
+            reactants.forEach(r => {
+                const isSelected = r.id === selectedReactant;
+                const btn = document.createElement('button');
+                
+                btn.className = `p-3 rounded-2xl font-bold flex items-center gap-3 transition-all duration-300 shadow-md ${
+                    isSelected 
+                        ? (isEvil ? 'bg-purple-900 text-red-400 ring-4 ring-red-500 scale-102' : `${r.color} text-slate-800 ring-4 ring-pink-400 scale-102`)
+                        : 'bg-white/70 hover:bg-white text-slate-700'
+                }`;
+
+                btn.onclick = () => {
+                    selectedReactant = r.id;
+                    playSound('click');
+                    renderButtons();
+                    updateBeakerAppearance();
+                };
+
+                btn.innerHTML = `
+                    <div class="w-8 h-8 rounded-xl flex items-center justify-center bg-white/50 text-base">
+                        <i class="fa-solid ${r.icon}"></i>
+                    </div>
+                    <span class="text-sm font-bold">${r.name}</span>
+                `;
+                reactantContainer.appendChild(btn);
+            });
+        }
+
+        function updateInfoCard() {
+            const m = metals.find(item => item.symbol === selectedMetal);
+            document.getElementById('info-name').innerText = `${m.name} (${m.symbol}) - Atomic # ${m.atomic}`;
+            document.getElementById('info-desc').innerText = isEvil ? m.evilDesc : m.joyDesc;
+        }
+
+        function updateBeakerAppearance() {
+            const liquid = document.getElementById('liquid-wave');
+            const atmosphere = document.getElementById('atmosphere-effect');
+            const beakerLabel = document.getElementById('beaker-label');
+
+            const liquidReactants = ['Water', 'HCl', 'H2SO4', 'HNO3', 'CH3COOH'];
+
+            if (liquidReactants.includes(selectedReactant)) {
+                liquid.style.opacity = '0.8';
+                liquid.style.top = '45%';
+                atmosphere.style.opacity = '0';
+                
+                if (selectedReactant === 'HCl') {
+                    liquid.className = isEvil ? 'wave wave-evil' : 'wave bg-gradient-to-b from-emerald-300 to-teal-500 animate-pulse';
+                } else if (selectedReactant === 'H2SO4') {
+                    liquid.className = isEvil ? 'wave wave-evil' : 'wave bg-gradient-to-b from-yellow-300 to-amber-500 animate-pulse';
+                } else if (selectedReactant === 'HNO3') {
+                    liquid.className = isEvil ? 'wave wave-evil' : 'wave bg-gradient-to-b from-orange-300 to-red-500 animate-pulse';
+                } else if (selectedReactant === 'CH3COOH') {
+                    liquid.className = isEvil ? 'wave wave-evil' : 'wave bg-gradient-to-b from-lime-200 to-green-400 animate-pulse';
+                } else {
+                    liquid.className = isEvil ? 'wave wave-evil' : 'wave wave-joy';
+                }
+            } else if (selectedReactant === 'Steam') {
+                liquid.style.opacity = '0.2';
+                liquid.style.top = '80%';
+                atmosphere.style.opacity = '1';
+                document.getElementById('gas-particles').innerText = isEvil ? '☣️ 💨 ☣️' : '💨 ☁️ 💨';
+            } else if (selectedReactant === 'Oxygen') {
+                liquid.style.opacity = '0.0';
+                atmosphere.style.opacity = '1';
+                document.getElementById('gas-particles').innerText = isEvil ? '🔥 ☢️ 🔥' : '✨ 💨 ✨';
+            }
+
+            beakerLabel.innerText = `${selectedMetal} + ${selectedReactant}`;
+        }
+
+        // --- TRIGGER REACTION ANIMATION & LOGIC WITH BEAKER SHAKE SCALING ---
+        function triggerReaction() {
+            if (isReacting) return;
+            isReacting = true;
+
+            const droplet = document.getElementById('metal-droplet');
+            const beakerFace = document.getElementById('beaker-face');
+            const beakerFrame = document.getElementById('beaker-frame');
+            const m = metals.find(item => item.symbol === selectedMetal);
+
+            // Set droplet element appearance
+            droplet.innerText = m.symbol;
+            droplet.style.backgroundColor = isEvil ? m.evilColor : m.color;
+            droplet.style.top = '10px';
+            droplet.style.opacity = '1';
+            droplet.style.transform = 'scale(1)';
+
+            // Drop Metal Animation
+            setTimeout(() => {
+                droplet.style.top = '170px';
+            }, 100);
+
+            // Splash & React
+            setTimeout(() => {
+                droplet.style.opacity = '0';
+                droplet.style.transform = 'scale(0.2)';
+
+                // Francium Nuke Check!
+                if (selectedMetal === 'Fr') {
+                    triggerFranciumExplosion();
+                    isReacting = false;
+                    return;
+                }
+
+                // Normal Chemical Reaction Audio & Shake intensity scaling based on reactivity rank (1-5)
+                const rxn = reactionData[selectedMetal][selectedReactant];
+                playSound(rxn.sound, selectedMetal);
+
+                // Beaker Shake scale
+                if (m.rank >= 2) {
+                    beakerFrame.style.animation = `shake ${0.2 / m.rank}s infinite`;
+                    setTimeout(() => beakerFrame.style.animation = 'none', 300 * m.rank);
+                }
+
+                // Update formula display
+                document.getElementById('formula-text').innerText = rxn.eq;
+                document.getElementById('product-name').innerText = rxn.name;
+
+                // Visual Distinct Particle & Flame Canvas Effect
+                startReactionVisuals(m);
+
+                // Face Reaction Effect
+                beakerFace.innerText = isEvil ? (m.rank > 3 ? '💥' : '😈') : (m.rank >= 4 ? '😱' : (m.rank >= 2 ? '😮' : '🤩'));
+                beakerFace.style.transform = `scale(${1 + m.rank * 0.1})`;
+
+                // Scaled Happy Confetti (Only in Joy Mode)
+                if (!isEvil && typeof confetti === 'function') {
+                    confetti({
+                        particleCount: 20 * m.rank,
+                        spread: 30 + m.rank * 15,
+                        origin: { y: 0.6 }
+                    });
+                }
+
+                setTimeout(() => {
+                    beakerFace.style.transform = 'scale(1)';
+                    beakerFace.innerText = isEvil ? '💀' : '😊';
+                    isReacting = false;
+                }, 1200 + m.rank * 100);
+
+            }, 600);
+        }
+
+        // --- FRANCIUM EXPLOSION & EVIL TRANSFORMATION ---
+        function triggerFranciumExplosion() {
+            playSound('nuke', 'Fr');
+            document.body.classList.add('shake-screen');
+
+            const overlay = document.getElementById('explosion-overlay');
+            overlay.style.pointerEvents = 'auto';
+            overlay.style.opacity = '1';
+
+            // Flashing screen
+            let flashCount = 0;
+            const flashInterval = setInterval(() => {
+                overlay.style.backgroundColor = flashCount % 2 === 0 ? 'rgba(239, 68, 68, 0.95)' : 'rgba(0, 0, 0, 0.95)';
+                flashCount++;
+                if (flashCount > 10) clearInterval(flashInterval);
+            }, 100);
+        }
+
+        function restartGame() {
+            document.body.classList.remove('shake-screen');
+            const overlay = document.getElementById('explosion-overlay');
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';
+
+            // Turn the world EVIL!
+            isEvil = true;
+
+            // Switch Music if Music was enabled
+            if (isMusicPlaying) {
+                const musicIcon = document.getElementById('music-icon');
+                const musicLabel = document.getElementById('music-label');
+                if (musicIcon) musicIcon.className = 'fa-solid fa-compact-disc animate-spin text-red-500';
+                if (musicLabel) musicLabel.innerText = '🎵 Playing: Boss Synth';
+                startBGM();
+            }
+
+            // Update Aesthetics to Evil
+            const body = document.getElementById('body-bg');
+            body.className = "evil-mode bg-gradient-to-br from-gray-950 via-purple-950 to-red-950 min-h-screen text-red-200 flex flex-col justify-between overflow-x-hidden transition-all duration-1000";
+
+            document.getElementById('header-card').className = "max-w-3xl mx-auto bg-black/80 backdrop-blur-md rounded-3xl p-4 shadow-2xl border-4 border-red-600/80 transition-all duration-700";
+            document.getElementById('title-text').innerText = "⚡ CURSED DEMON LAB ⚡";
+            document.getElementById('app-title').className = "text-3xl md:text-5xl font-extrabold text-red-600 tracking-wider drop-shadow-lg flex items-center justify-center gap-3 evil-glow";
+            document.getElementById('app-subtitle').innerText = "You unleashed Francium! Everything is now corrupted & dark... 💀";
+            document.getElementById('app-subtitle').className = "text-sm md:text-base font-bold text-purple-400 mt-1";
+
+            document.getElementById('metal-panel').className = "md:col-span-4 bg-black/80 backdrop-blur-md rounded-3xl p-5 shadow-2xl border-4 border-red-900/60 flex flex-col justify-between transition-all duration-700";
+            document.getElementById('reactant-panel').className = "md:col-span-3 bg-black/80 backdrop-blur-md rounded-3xl p-5 shadow-2xl border-4 border-red-900/60 flex flex-col justify-between transition-all duration-700";
+            
+            document.getElementById('metal-heading').className = "text-xl font-bold text-red-500 mb-3 flex items-center gap-2";
+            document.getElementById('reactant-heading').className = "text-xl font-bold text-red-500 mb-3 flex items-center gap-2";
+
+            document.getElementById('metal-info-card').className = "mt-4 p-3 rounded-2xl bg-red-950/80 border-2 border-red-800 text-xs text-red-300";
+            document.getElementById('formula-card').className = "mt-4 p-4 rounded-2xl bg-red-950/90 border-2 border-purple-800 text-center shadow-inner transition-all duration-500";
+            document.getElementById('formula-text').className = "text-base font-extrabold text-red-400 my-1 break-words leading-snug";
+            document.getElementById('product-name').className = "text-xs text-purple-400 font-medium italic mt-1";
+
+            document.getElementById('beaker-frame').className = "glass-beaker-evil w-56 h-64 shadow-2xl z-10 flex items-end justify-center";
+            document.getElementById('beaker-face').innerText = "💀";
+
+            const reactBtn = document.getElementById('react-btn');
+            reactBtn.className = "mt-5 w-full max-w-xs py-3.5 px-6 rounded-2xl bg-gradient-to-r from-red-700 via-purple-900 to-black text-red-200 font-extrabold text-lg shadow-2xl hover:scale-105 active:scale-95 transition-all duration-300 border-2 border-red-600 flex items-center justify-center gap-3 evil-glow";
+            reactBtn.innerHTML = `<span>UNLEASH CHAOS!</span> <i class="fa-solid fa-skull"></i>`;
+
+            document.getElementById('footer-card').className = "max-w-md mx-auto bg-black/80 backdrop-blur-sm rounded-full py-1.5 px-4 text-xs font-semibold text-red-400 shadow-sm border border-red-900/50";
+            document.getElementById('footer-text').innerText = "⚠️ Cursed Fact: Francium has a half-life of only 22 minutes before it decays into doom.";
+
+            // Reset Default Selection
+            selectedMetal = 'Li';
+            renderButtons();
+            updateInfoCard();
+            updateBeakerAppearance();
+            document.getElementById('formula-text').innerText = "Doom Awakened.";
+            document.getElementById('product-name').innerText = "Choose your cursed reaction...";
+        }
+
+        // --- ENHANCED CANVAS & DISTINCT EXPLOSION SYSTEM ---
+        const rCanvas = document.getElementById('reaction-canvas');
+        const rCtx = rCanvas.getContext('2d');
+        const fCanvas = document.getElementById('fire-canvas');
+        const fCtx = fCanvas.getContext('2d');
+
+        let particles = [];
+        let shockwaves = [];
+        let fireParticles = [];
+
+        function resizeCanvases() {
+            rCanvas.width = rCanvas.clientWidth;
+            rCanvas.height = rCanvas.clientHeight;
+            fCanvas.width = fCanvas.clientWidth;
+            fCanvas.height = fCanvas.clientHeight;
+        }
+        resizeCanvases();
+        window.addEventListener('resize', resizeCanvases);
+
+        function startReactionVisuals(metal) {
+            const rank = metal.rank;
+            const primaryColor = isEvil ? '#ff0055' : metal.color;
+            const flameColor = isEvil ? '#990000' : metal.flameColor;
+
+            // 1. Gas / Hydrogen Bubbles (Scales with rank)
+            const bubbleCount = 15 + rank * 20;
+            for (let i = 0; i < bubbleCount; i++) {
+                particles.push({
+                    x: rCanvas.width / 2 + (Math.random() * (20 * rank) - (10 * rank)),
+                    y: rCanvas.height - 50,
+                    vx: (Math.random() - 0.5) * (1.5 * rank),
+                    vy: -Math.random() * (2 + rank * 1.5) - 1,
+                    size: Math.random() * (4 + rank * 2) + 2,
+                    color: primaryColor,
+                    alpha: 1
+                });
+            }
+
+            // 2. Distinct Explosive Flames & Sparks (Scales aggressively by metal reactivity)
+            if (rank >= 2) { // Na, K, Rb, Cs produce dynamic flame explosions
+                const sparkCount = rank * 35;
+                for (let i = 0; i < sparkCount; i++) {
+                    const angle = Math.random() * Math.PI * 2;
+                    const speed = Math.random() * (2 + rank * 3) + 1;
+                    fireParticles.push({
+                        x: fCanvas.width / 2,
+                        y: fCanvas.height - 70,
+                        vx: Math.cos(angle) * speed,
+                        vy: Math.sin(angle) * speed - (rank * 1.5),
+                        size: Math.random() * (3 + rank * 2) + 2,
+                        color: Math.random() > 0.4 ? flameColor : '#ffffff',
+                        alpha: 1,
+                        decay: 0.015 + Math.random() * 0.02
+                    });
+                }
+            }
+
+            // 3. Shockwave Rings for Highly Reactive Metals (Rb and Cs)
+            if (rank >= 4) {
+                const waveCount = rank === 4 ? 1 : 3;
+                for (let w = 0; w < waveCount; w++) {
+                    shockwaves.push({
+                        x: fCanvas.width / 2,
+                        y: fCanvas.height - 70,
+                        radius: 5,
+                        maxRadius: 40 + rank * 20,
+                        color: flameColor,
+                        alpha: 1,
+                        lineWidth: 3 + rank
+                    });
+                }
+            }
+        }
+
+        function animateVisuals() {
+            rCtx.clearRect(0, 0, rCanvas.width, rCanvas.height);
+            fCtx.clearRect(0, 0, fCanvas.width, fCanvas.height);
+
+            // Animate Bubbles / Gas
+            particles.forEach((p, idx) => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.alpha -= 0.015;
+
+                rCtx.save();
+                rCtx.globalAlpha = Math.max(0, p.alpha);
+                rCtx.fillStyle = p.color;
+                rCtx.beginPath();
+                rCtx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                rCtx.fill();
+                rCtx.restore();
+
+                if (p.alpha <= 0) particles.splice(idx, 1);
+            });
+
+            // Animate Flames & Explosive Sparks
+            fireParticles.forEach((f, idx) => {
+                f.x += f.vx;
+                f.y += f.vy;
+                f.alpha -= f.decay;
+
+                fCtx.save();
+                fCtx.globalAlpha = Math.max(0, f.alpha);
+                fCtx.fillStyle = f.color;
+                fCtx.shadowColor = f.color;
+                fCtx.shadowBlur = 10;
+                fCtx.beginPath();
+                fCtx.arc(f.x, f.y, f.size, 0, Math.PI * 2);
+                fCtx.fill();
+                fCtx.restore();
+
+                if (f.alpha <= 0) fireParticles.splice(idx, 1);
+            });
+
+            // Animate Explosive Shockwaves (Rb / Cs)
+            shockwaves.forEach((sw, idx) => {
+                sw.radius += 4;
+                sw.alpha -= 0.03;
+
+                fCtx.save();
+                fCtx.globalAlpha = Math.max(0, sw.alpha);
+                fCtx.strokeStyle = sw.color;
+                fCtx.lineWidth = sw.lineWidth;
+                fCtx.shadowColor = sw.color;
+                fCtx.shadowBlur = 15;
+                fCtx.beginPath();
+                fCtx.arc(sw.x, sw.y, sw.radius, 0, Math.PI * 2);
+                fCtx.stroke();
+                fCtx.restore();
+
+                if (sw.alpha <= 0 || sw.radius >= sw.maxRadius) shockwaves.splice(idx, 1);
+            });
+
+            requestAnimationFrame(animateVisuals);
+        }
+
+        // --- INIT ---
+        window.onload = () => {
+            renderButtons();
+            updateInfoCard();
+            updateBeakerAppearance();
+            animateVisuals();
+        };
+    </script>
+</body>
+</html>
